@@ -32,7 +32,7 @@ double calculateExpectedOutcome(int ratingA, int ratingB) {
 
 // Update the Elo ratings based on the actual outcome
 // outcome is 1 for win, 0 for loss, 0.5 for tie
-void updateEloRatings(const Game& game, Rating& ratingA, Rating& ratingB){ //), double outcome) {
+void updateEloRatings(const Game& game, Rating& ratingH, Rating& ratingA){ //), double outcome) {
     int atr = game.away_team_runs;
     int htr = game.home_team_runs;
     int aid = game.away_team_id;
@@ -40,8 +40,10 @@ void updateEloRatings(const Game& game, Rating& ratingA, Rating& ratingB){ //), 
 
     if(atr > htr){
 	    std::cout << aid << " beat " << hid << "," << atr << "-" << htr << std::endl;
+            std::cout << ratingA.team_id+1 << " over " << ratingH.team_id+1 << std::endl;
     }else if (game.home_team_runs > game.away_team_runs){
 	    std::cout << hid << " beat " << aid << "," << htr << "-" << atr << std::endl;
+            std::cout << ratingH.team_id+1 << " over " << ratingA.team_id+1 << std::endl;
     }
 }
 
