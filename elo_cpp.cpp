@@ -21,8 +21,8 @@ struct Game {
 
 struct Rating {
     int team_id;
-    int rating = 1500;
-    int epochtime;
+    int elo_rating = 1500;
+    double epochtime;
 };
 
 // Calculate the expected outcome probability
@@ -83,11 +83,16 @@ int main() {
     sqlite3_close(db);
 
     std::vector<Rating> ratings;
-    for(auto& rating : ratings){
-    	rating.epochtime = games[0].epochtime
+    for(int i=0;i<NUM_TEAMS;i++){
+	Rating rating;
+	rating.team_id = i;
+    	rating.epochtime = games[0].epochtime;
+	ratings.push_back(rating);	
+        std::cout<<rating.team_id <<" "<<rating.epochtime<<std::endl;
     }
+
     // Display the retrieved data
-    for (const auto& game : games) {
+    /*for (const auto& game : games) {
        // std::cout << "ID" << std::endl;
        if(game.home_team_runs > game.away_team_runs){
        std::cout << "Win for home_team_id: "<<game.away_team_id<<std::endl;
@@ -97,11 +102,10 @@ int main() {
        std::cout << "Tie" << std::endl;
        }
 
-    }
+    }*/
 
     std::cout << "Total size of the table: " << games.size() << std::endl;
 
-    std::vector<double> eloratings(NUM_TEAMS, BASE_RATING);
 
 
     return 0;
