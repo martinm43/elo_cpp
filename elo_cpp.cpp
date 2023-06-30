@@ -1,4 +1,4 @@
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include <sqlite3.h>
 #include <vector>
@@ -32,13 +32,17 @@ double calculateExpectedOutcome(int ratingA, int ratingB) {
 
 // Update the Elo ratings based on the actual outcome
 // outcome is 1 for win, 0 for loss, 0.5 for tie
-void updateEloRatings(int& ratingA, int& ratingB, double outcome) {
-    int ratingDifference = ratingB - ratingA;
-    double expectedOutcome = calculateExpectedOutcome(ratingA, ratingB);
-    int ratingChange = static_cast<int>(K_FACTOR * (outcome - expectedOutcome));
+void updateEloRatings(const Game& game) {//, Rating& ratingA, Rating& ratingB, double outcome) {
+    int atr = game.away_team_runs;
+    int htr = game.home_team_runs;
+    int aid = game.away_team_id;
+    int hid = game.home_team_id;
 
-    ratingA += ratingChange;
-    ratingB -= ratingChange;
+    if(atr > htr){
+	    std::cout << aid << " beat " << hid << "," << atr << "-" << htr << std::endl;
+    }else if (game.home_team_runs > game.away_team_runs){
+	    std::cout << hid << " beat " << aid << "," << htr << "-" << atr << std::endl;
+    }
 }
 
 int selectDataCallback(void* data, int argc, char** argv, char** /*azColName*/) {
@@ -92,17 +96,10 @@ int main() {
     }
 
     // Display the retrieved data
-    /*for (const auto& game : games) {
-       // std::cout << "ID" << std::endl;
-       if(game.home_team_runs > game.away_team_runs){
-       std::cout << "Win for home_team_id: "<<game.away_team_id<<std::endl;
-       }else if (game.away_team_runs > game.home_team_runs){
-       std::cout << "Win for away_team_id: "<<game.away_team_id<<std::endl;
-       }else{
-       std::cout << "Tie" << std::endl;
-       }
+    for (const auto& game : games) {
+      updateEloRatings(game); 
+      }
 
-    }*/
 
     std::cout << "Total size of the table: " << games.size() << std::endl;
 
