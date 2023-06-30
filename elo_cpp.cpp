@@ -31,6 +31,7 @@ double calculateExpectedOutcome(int ratingA, int ratingB) {
 }
 
 // Update the Elo ratings based on the actual outcome
+// outcome is 1 for win, 0 for loss, 0.5 for tie
 void updateEloRatings(int& ratingA, int& ratingB, double outcome) {
     int ratingDifference = ratingB - ratingA;
     double expectedOutcome = calculateExpectedOutcome(ratingA, ratingB);
@@ -82,6 +83,9 @@ int main() {
     sqlite3_close(db);
 
     std::vector<Rating> ratings;
+    for(auto& rating : ratings){
+    	rating.epochtime = games[0].epochtime
+    }
     // Display the retrieved data
     for (const auto& game : games) {
        // std::cout << "ID" << std::endl;
