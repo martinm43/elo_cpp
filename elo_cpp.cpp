@@ -3,7 +3,7 @@
 #include <sqlite3.h>
 #include <vector>
 
-#define KFACTOR 30
+#define K_FACTOR 30
 #define NUM_TEAMS 30
 #define BASE_RATING 1500.0
 
@@ -18,14 +18,26 @@ struct Game {
     double epochtime;
 };
 
-// Function to calculate the expected probability of player A winning
-double calculateExpectedProbability(int ratingA, int ratingB) {
-    return 1.0 / (1.0 + pow(10.0, (ratingB - ratingA) / 400.0));
+
+struct Rating {
+    int team_id;
+    int rating = 1500;
+    int epochtime;
+};
+
+// Calculate the expected outcome probability
+double calculateExpectedOutcome(int ratingA, int ratingB) {
+    return 1.0 / (1.0 + std::pow(10.0, static_cast<double>(ratingB - ratingA) / 400.0));
 }
 
-// Function to update the Elo rating of a player
-int updateEloRating(int rating, double score, double expectedScore, int kFactor) {
-    return rating + kFactor * (score - expectedScore);
+// Update the Elo ratings based on the actual outcome
+void updateEloRatings(int& ratingA, int& ratingB, double outcome) {
+    int ratingDifference = ratingB - ratingA;
+    double expectedOutcome = calculateExpectedOutcome(ratingA, ratingB);
+    int ratingChange = static_cast<int>(K_FACTOR * (outcome - expectedOutcome));
+
+    ratingA += ratingChange;
+    ratingB -= ratingChange;
 }
 
 int selectDataCallback(void* data, int argc, char** argv, char** /*azColName*/) {
@@ -69,15 +81,24 @@ int main() {
     // Close the database connection
     sqlite3_close(db);
 
+    std::vector<Rating> ratings;
     // Display the retrieved data
     for (const auto& game : games) {
-        std::cout << "ID: " << game.id << " Year: " << game.year << std:: endl ; 
-    	//<< ", Name: " << game.name << ", Score: " << game.score << std::endl;
+       // std::cout << "ID" << std::endl;
+       if(game.home_team_runs > game.away_team_runs){
+       std::cout << "Win for home_team_id: "<<game.away_team_id<<std::endl;
+       }else if (game.away_team_runs > game.home_team_runs){
+       std::cout << "Win for away_team_id: "<<game.away_team_id<<std::endl;
+       }else{
+       std::cout << "Tie" << std::endl;
+       }
+
     }
 
     std::cout << "Total size of the table: " << games.size() << std::endl;
 
     std::vector<double> eloratings(NUM_TEAMS, BASE_RATING);
+
 
     return 0;
 }
