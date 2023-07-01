@@ -23,6 +23,7 @@ struct Game {
 struct Rating {
     int team_id;
     int elo_rating = 1500;
+    int year;
     double epochtime;
 };
 
@@ -88,7 +89,7 @@ int main() {
 
     // Query the table
     const char* selectDataQuery = "SELECT id, home_team_id, home_team_runs, away_team_id, away_team_runs,"
-    " year , epochtime FROM Games WHERE year >= 2015 and year <= 2017"; 
+    " year , epochtime FROM Games"; 
     std::vector<Game> games;
     rc = sqlite3_exec(db, selectDataQuery, selectDataCallback, &games, &errorMsg);
     if (rc != SQLITE_OK) {
@@ -121,18 +122,22 @@ int main() {
         processing_year = games[i].year; //change the processing year
       }
       updateEloRatings(games[i], ratings[games[i].home_team_id-1], ratings[games[i].away_team_id-1]);
-      std::cout<<ratings[1].team_id+1 << " rating: " << ratings[1].elo_rating 
-      << "epochtime: " << ratings[1].epochtime << " in year " << games[i].year << std::endl;
+      //std::cout<<ratings[1].team_id+1 << " rating: " << ratings[1].elo_rating 
+      //<< "epochtime: " << ratings[1].epochtime << " in year " << games[i].year << std::endl;
+      
+      ratings[games[i].home_team_id-1].year = processing_year;
+      ratings[games[i].away_team_id-1].year = processing_year;
+      
       ratings_history.push_back(ratings[games[i].home_team_id-1]);
       ratings_history.push_back(ratings[games[i].away_team_id-1]);
       
     }
 
-    for(const auto& rating : ratings_history){
+    /*for(const auto& rating : ratings_history){
         std::cout<<rating.team_id+1 << " rating " << rating.elo_rating 
         << " at date " << rating.epochtime <<std::endl;
-    }
-    std::cout << "Total size of ALL ratings: " << ratings_history.size() << std::endl;
+    }*/
+    std::cout << "Total ELO ratings calculated: " << ratings_history.size() << std::endl;
 
     // Open the SQLite database
     rc = sqlite3_open("mlb_data.sqlite", &db);
@@ -146,7 +151,8 @@ int main() {
     std::string createQuery = "CREATE TABLE IF NOT EXISTS ratings ("
                               "team_id INTEGER, "
                               "elo_rating INTEGER, "
-                              "epochtime REAL);";
+                              "epochtime REAL, "
+                              "year INTEGER);";
     rc = sqlite3_exec(db, createQuery.c_str(), nullptr, nullptr, &errorMsg);
     if (rc != SQLITE_OK) {
         std::cerr << "Error creating table: " << errorMsg << std::endl;
@@ -156,7 +162,7 @@ int main() {
     }
 
     // Prepare the INSERT statement using INSERT INTO VALUES 
-    std::string insertQuery = "INSERT INTO ratings (team_id, elo_rating, epochtime) VALUES (?, ?, ?);";
+    std::string insertQuery = "INSERT INTO ratings (team_id, elo_rating, epochtime, year) VALUES (?, ?, ?, ?);";
     sqlite3_stmt *stmt;
     rc = sqlite3_prepare_v2(db, insertQuery.c_str(), -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
@@ -165,11 +171,20 @@ int main() {
         return 1;
     }
 
+    rc = sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error beginning transaction: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return 1;
+    }
+
     // Bind and execute the INSERT statement for each Rating object in the ratings_history collection
-    for (const auto &rating : ratings_history) {
+    for (int i=0;i<ratings_history.size();i++) {
+        Rating rating = ratings_history[i];
         sqlite3_bind_int(stmt, 1, rating.team_id);
         sqlite3_bind_int(stmt, 2, rating.elo_rating);
         sqlite3_bind_double(stmt, 3, rating.epochtime);
+        sqlite3_bind_int(stmt, 4, rating.year);
 
         rc = sqlite3_step(stmt);
         if (rc != SQLITE_DONE) {
@@ -177,15 +192,23 @@ int main() {
             sqlite3_close(db);
             return 1;
         }
-
+        //std::cout<<i<<std::endl;
         sqlite3_reset(stmt);
+    }
+
+    // Commit the transaction
+    rc = sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error committing transaction: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return 1;
     }
 
     // Finalize the statement and close the database connection
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 
-
+    std::cout<<"Elo ratings uploaded successfully into database. "<<std::endl;
 
     return 0;
 }
