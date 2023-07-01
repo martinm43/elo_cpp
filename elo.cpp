@@ -3,7 +3,7 @@
 #include <sqlite3.h>
 #include <vector>
 
-#define K_FACTOR 30
+#define K_FACTOR 2
 #define NUM_TEAMS 30
 #define BASE_RATING 1500.0
 
@@ -26,8 +26,8 @@ struct Rating {
 };
 
 // Calculate the expected outcome probability
-double calculateExpectedOutcome(int ratingA, int ratingB) {
-    return 1.0 / (1.0 + std::pow(10.0, static_cast<double>(ratingB - ratingA) / 400.0));
+double calculateExpectedOutcome(int ratingH, int ratingA) {
+    return 1.5 / (1.0 + std::pow(10.0, static_cast<double>(ratingH - ratingA) / 400.0));
 }
 
 // Update the Elo ratings based on the actual outcome
@@ -38,13 +38,21 @@ void updateEloRatings(const Game& game, Rating& ratingH, Rating& ratingA){ //), 
     int aid = game.away_team_id;
     int hid = game.home_team_id;
 
-    if(atr > htr){
+    int ratingDifference = ratingH.elo_rating - ratingA.elo_rating;
+    double expectedOutcome = calculateExpectedOutcome(ratingH.elo_rating, ratingA.elo_rating);
+    int ratingChange = static_cast<int>(K_FACTOR * (htr - atr - expectedOutcome));
+
+    ratingH.elo_rating += ratingChange;
+    ratingA.elo_rating -= ratingChange;
+
+
+    /*if(atr > htr){
 	    std::cout << aid << " beat " << hid << "," << atr << "-" << htr << std::endl;
             std::cout << ratingA.team_id+1 << " over " << ratingH.team_id+1 << std::endl;
     }else if (game.home_team_runs > game.away_team_runs){
 	    std::cout << hid << " beat " << aid << "," << htr << "-" << atr << std::endl;
             std::cout << ratingH.team_id+1 << " over " << ratingA.team_id+1 << std::endl;
-    }
+    }*/
 }
 
 int selectDataCallback(void* data, int argc, char** argv, char** /*azColName*/) {
@@ -94,7 +102,7 @@ int main() {
 	rating.team_id = i;
     	rating.epochtime = games[0].epochtime;
 	ratings.push_back(rating);	
-        std::cout<<rating.team_id <<" "<<rating.epochtime<<std::endl;
+        //std::cout<<rating.team_id <<" "<<rating.epochtime<<std::endl;
     }
 
     // Display the retrieved data
@@ -102,7 +110,9 @@ int main() {
       updateEloRatings(game, ratings[game.home_team_id-1], ratings[game.away_team_id-1]); 
       }
 
-
+    for(const auto& rating : ratings){
+        std::cout<<rating.team_id+1 << " rating: " << rating.elo_rating <<std::endl;
+    }
     std::cout << "Total size of the table: " << games.size() << std::endl;
 
 
