@@ -3,7 +3,8 @@
 #include <sqlite3.h>
 #include <vector>
 
-#define K_FACTOR 2
+#define REBASE_FACTOR 0.85
+#define K_FACTOR 1
 #define NUM_TEAMS 30
 #define BASE_RATING 1500.0
 
@@ -83,7 +84,8 @@ int main() {
     }
 
     // Query the table
-    const char* selectDataQuery = "SELECT id, home_team_id, home_team_runs, away_team_id, away_team_runs, year , epochtime FROM Games WHERE year=2015";
+    const char* selectDataQuery = "SELECT id, home_team_id, home_team_runs, away_team_id, away_team_runs,"
+    " year , epochtime FROM Games"; // WHERE year=2015";
     std::vector<Game> games;
     rc = sqlite3_exec(db, selectDataQuery, selectDataCallback, &games, &errorMsg);
     if (rc != SQLITE_OK) {
@@ -106,9 +108,18 @@ int main() {
     }
 
     // Display the retrieved data
-    for (const auto& game : games) {
-      updateEloRatings(game, ratings[game.home_team_id-1], ratings[game.away_team_id-1]); 
+    int processing_year = games[0].year;
+    for (int i=0;i<games.size();i++) {
+      if (games[i].year > processing_year){
+        for (auto& rating : ratings){
+            rating.elo_rating = (REBASE_FACTOR)*rating.elo_rating+(1-REBASE_FACTOR)*1500; //carry over some of past rating
+        }
+        processing_year = games[i].year; //change the processing year
       }
+      updateEloRatings(games[i], ratings[games[i].home_team_id-1], ratings[games[i].away_team_id-1]);
+      std::cout<<ratings[1].team_id+1 << " rating: " << ratings[1].elo_rating << " in year " << games[i].year << std::endl;
+      
+    }
 
     for(const auto& rating : ratings){
         std::cout<<rating.team_id+1 << " rating: " << rating.elo_rating <<std::endl;
