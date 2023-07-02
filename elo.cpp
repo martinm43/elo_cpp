@@ -148,7 +148,7 @@ int main() {
     }
 
     //Delete existing table
-    std::string deleteQuery = "DROP TABLE ratings;";
+    std::string deleteQuery = "DROP TABLE IF EXISTS ratings;";
     rc = sqlite3_exec(db, deleteQuery.c_str(), nullptr, nullptr, &errorMsg);
     if (rc != SQLITE_OK) {
         std::cerr << "Error deleting table: " << errorMsg << std::endl;
@@ -162,6 +162,7 @@ int main() {
 
     // Create the table again
     std::string createQuery = "CREATE TABLE ratings ("
+                              "id INTEGER PRIMARY KEY, "
                               "team_id INTEGER, "
                               "elo_rating INTEGER, "
                               "epochtime REAL, "
