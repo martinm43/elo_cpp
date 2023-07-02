@@ -37,10 +37,7 @@ double calculateExpectedOutcome(int ratingH, int ratingA) {
 void updateEloRatings(const Game& game, Rating& ratingH, Rating& ratingA){ //), double outcome) {
     int atr = game.away_team_runs;
     int htr = game.home_team_runs;
-    int aid = game.away_team_id;
-    int hid = game.home_team_id;
 
-    int ratingDifference = ratingH.elo_rating - ratingA.elo_rating;
     double expectedOutcome = calculateExpectedOutcome(ratingH.elo_rating, ratingA.elo_rating);
     int ratingChange = static_cast<int>(K_FACTOR * (htr - atr - expectedOutcome));
 
@@ -114,7 +111,7 @@ int main() {
 
     // Display the retrieved data
     int processing_year = games[0].year;
-    for (int i=0;i<games.size();i++) {
+    for (unsigned long i=0;i<games.size();i++) {
       if (games[i].year > processing_year){
         for (auto& rating : ratings){
             rating.elo_rating = (REBASE_FACTOR)*rating.elo_rating+(1-REBASE_FACTOR)*1500; //carry over some of past rating
@@ -195,7 +192,7 @@ int main() {
     }
 
     // Bind and execute the INSERT statement for each Rating object in the ratings_history collection
-    for (int i=0;i<ratings_history.size();i++) {
+    for (unsigned long i=0;i<ratings_history.size();i++) {
         Rating rating = ratings_history[i];
         sqlite3_bind_int(stmt, 1, rating.team_id);
         sqlite3_bind_int(stmt, 2, rating.elo_rating);
