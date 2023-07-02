@@ -147,8 +147,21 @@ int main() {
         return 1;
     }
 
-    // Create the table if it doesn't exist
-    std::string createQuery = "CREATE TABLE IF NOT EXISTS ratings ("
+    //Delete existing table
+    std::string deleteQuery = "DROP TABLE ratings;";
+    rc = sqlite3_exec(db, deleteQuery.c_str(), nullptr, nullptr, &errorMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error deleting table: " << errorMsg << std::endl;
+        sqlite3_free(errorMsg);
+        sqlite3_close(db);
+        return 1;
+    } else {
+        std::cout << "Original ratings table deleted successfully." << std::endl;
+    }
+
+
+    // Create the table again
+    std::string createQuery = "CREATE TABLE ratings ("
                               "team_id INTEGER, "
                               "elo_rating INTEGER, "
                               "epochtime REAL, "
@@ -159,6 +172,8 @@ int main() {
         sqlite3_free(errorMsg);
         sqlite3_close(db);
         return 1;
+    } else {
+        std::cout << "New blank ratings table created. Populating." << std::endl;
     }
 
     // Prepare the INSERT statement using INSERT INTO VALUES 
