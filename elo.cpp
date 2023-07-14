@@ -22,7 +22,7 @@ struct Game {
 
 struct Rating {
     int team_id;
-    int elo_rating = 1500;
+    float elo_rating = 1500;
     int year;
     double epochtime;
 };
@@ -39,7 +39,7 @@ void updateEloRatings(const Game& game, Rating& ratingH, Rating& ratingA){ //), 
     int htr = game.home_team_runs;
 
     double expectedOutcome = calculateExpectedOutcome(ratingH.elo_rating, ratingA.elo_rating);
-    int ratingChange = static_cast<int>(K_FACTOR * (htr - atr - expectedOutcome));
+    float ratingChange = K_FACTOR * (htr - atr - expectedOutcome);
 
     ratingH.epochtime = game.epochtime;
     ratingA.epochtime =game.epochtime;
@@ -161,7 +161,7 @@ int main() {
     std::string createQuery = "CREATE TABLE ratings ("
                               "id INTEGER PRIMARY KEY, "
                               "team_id INTEGER, "
-                              "elo_rating INTEGER, "
+                              "elo_rating FLOATs, "
                               "epochtime REAL, "
                               "year INTEGER);";
     rc = sqlite3_exec(db, createQuery.c_str(), nullptr, nullptr, &errorMsg);
@@ -195,7 +195,7 @@ int main() {
     for (unsigned long i=0;i<ratings_history.size();i++) {
         Rating rating = ratings_history[i];
         sqlite3_bind_int(stmt, 1, rating.team_id);
-        sqlite3_bind_int(stmt, 2, rating.elo_rating);
+        sqlite3_bind_double(stmt, 2, rating.elo_rating);
         sqlite3_bind_double(stmt, 3, rating.epochtime);
         sqlite3_bind_int(stmt, 4, rating.year);
 
