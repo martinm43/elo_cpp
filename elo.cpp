@@ -8,6 +8,11 @@
 #define NUM_TEAMS 30
 #define BASE_RATING 1500.0
 
+//To Do:
+// 1. check to make sure team ids created work correctly.
+// 2. add in the appropriate update statement below.
+
+
 //ORM
 struct Game {
     int id;
@@ -163,6 +168,8 @@ int main() {
                               "team_id INTEGER, "
                               "elo_rating FLOATs, "
                               "epochtime REAL, "
+                              "team_abbreviation STRING, "
+                              "current_abbreviation STRING, "
                               "year INTEGER);";
     rc = sqlite3_exec(db, createQuery.c_str(), nullptr, nullptr, &errorMsg);
     if (rc != SQLITE_OK) {
