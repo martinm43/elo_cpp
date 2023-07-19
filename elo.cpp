@@ -228,7 +228,14 @@ int main() {
     sqlite3_finalize(stmt);
 
     //SQL statement for updating all team abbreviations
-    //set team_abbreviation = (select abbreviation from teams as t where r.team_id = t.id)
+    std::string abbrev_update = "UPDATE ratings as r SET team_abbreviation = (SELECT abbreviation FROM teams AS t WHERE r.team_id = t.id)";
+    // Commit the transaction
+    rc = sqlite3_exec(db, abbrev_update.c_str(), nullptr, nullptr, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error updating associated abbreviations: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return 1;
+    }
 
     sqlite3_close(db);
 
