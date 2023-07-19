@@ -108,7 +108,7 @@ int main() {
     std::vector<Rating> ratings_history;
     for(int i=0;i<NUM_TEAMS;i++){
 	Rating rating;
-	rating.team_id = i;
+	rating.team_id = i+1;
     	rating.epochtime = games[0].epochtime;
 	ratings.push_back(rating);	
         //std::cout<<rating.team_id <<" "<<rating.epochtime<<std::endl;
@@ -226,6 +226,10 @@ int main() {
 
     // Finalize the statement and close the database connection
     sqlite3_finalize(stmt);
+
+    //SQL statement for updating all team abbreviations
+    //set team_abbreviation = (select abbreviation from teams as t where r.team_id = t.id)
+
     sqlite3_close(db);
 
     std::cout<<"Elo ratings uploaded successfully into database. "<<std::endl;
